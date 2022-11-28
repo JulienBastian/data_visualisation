@@ -2,17 +2,15 @@
 ## chargement de la base de donnée 
 chomage2020 <-read.csv("FD_csv_EEC20.csv",sep = ";")
 
-install.packages("esquisse")
-
-library(esquisse)
+#library(esquisse)
 
 ##Mettre en français 
-set_i18n("fr")
-esquisser(chomage2020)
+#iset_i18n("fr")
+#esquisser(chomage2020)
 ##lancement des librairies
 library(questionr)
 library(tidyverse)
-library(ggplot2)
+#library(ggplot2)
 library(FactoMineR)
 
 ## I- recodage de la base de données ----
@@ -33,8 +31,8 @@ chomage2020$CSP<-fct_recode(chomage2020$CSP,
                             "Autres personnes sans activité professionnelle"="8" )
 
 
-                            
-  ##vérification 
+
+##vérification 
 table(chomage2020$CSTOTR)
 table(chomage2020$CSP)
 
@@ -43,12 +41,12 @@ mode(chomage2020$ACTEU6)
 chomage2020$statutACT<-as.character(chomage2020$ACTEU6)
 chomage2020$statutACT=fct_explicit_na(chomage2020$statutACT, "null")
 chomage2020$statutACT<-fct_recode(chomage2020$statutACT,
-                              "Sans objet" = "null", ##non trouve par R - laisse la case vide - voir comment remplacer le vide par "sans objet" - mais n'empêche pas le pgm de tourner
-                              "Actif occupé" = "1",
-                              "Chômeur PSERE (Population sans Emploi à la Recherche d'un Emploi)"="3",
-                              "Autre chômeur BIT"="4",
-                              "Étudiant, élève, stagiaire en formation (inactifs)"="5",
-                              "Autres inactifs (dont retraités)"="6")
+                                  "Sans objet" = "null", ##non trouve par R - laisse la case vide - voir comment remplacer le vide par "sans objet" - mais n'empêche pas le pgm de tourner
+                                  "Actif occupé" = "1",
+                                  "Chômeur PSERE (Population sans Emploi à la Recherche d'un Emploi)"="3",
+                                  "Autre chômeur BIT"="4",
+                                  "Étudiant, élève, stagiaire en formation (inactifs)"="5",
+                                  "Autres inactifs (dont retraités)"="6")
 
 ##verification
 sum(is.na(as.character(chomage2020$ACTEU6)))
@@ -60,19 +58,21 @@ table(chomage2020$statutACT)
 
 mode(chomage2020$AGE5)
 chomage2020$AGE<-as.character(chomage2020$AGE5)
+#age au dernier jour de la semaine de référence
 chomage2020$AGE<-fct_recode(chomage2020$AGE,
-                            "Âge au dernier jour de la semaine de référence (5 postes, premier type de regroupement) De 15 à 29 ans"="0", ## recodage inutile car CSP sans actif 
-                            "Âge au dernier jour de la semaine de référence (5 postes, premier type de regroupement) De 15 à 29 ans"="15",
-                            "Âge au dernier jour de la semaine de référence (5 postes, premier type de regroupement) De 30 à 39 ans"="30",
-                            "Âge au dernier jour de la semaine de référence (5 postes, premier type de regroupement) De 40 à 49 ans"="40",
-                            "Âge au dernier jour de la semaine de référence (5 postes, premier type de regroupement) De 50 à 59 ans "="40",
-                            "Âge au dernier jour de la semaine de référence (5 postes, premier type de regroupement) DE 60 ans ou plus"="60 ou plus",)
+                            #"15 à 29 ans"="0", ## recodage inutile car CSP sans actif 
+                            "15 à 29 ans"="15",
+                            "30 à 39 ans"="30",
+                            "40 à 49 ans"="40",
+                            "50 à 59 ans "="50",
+                            "60 ans ou +"="60",)
 
 
 ##verification
+
 table(chomage2020$AGE5)
 table(chomage2020$AGE)
-                            
+
 ## Actif ou non actif (ACTIF)
 
 mode(chomage2020$ACTIF)
@@ -82,7 +82,7 @@ chomage2020$tauxdechômage<-fct_recode(chomage2020$tauxdechômage,
                                       "Actif au sens du BIT/inactif"="2",
 )
 
- ##verification
+##verification
 table(chomage2020$ACTIF)
 table(chomage2020$tauxdechômage)
 
@@ -107,15 +107,15 @@ chomage2020$raisonchangemploi<-fct_recode(chomage2020$raisonchangemploi,
                                           "Trouve l'ambiance de travail mauvaise, les relations de travail conflictuelles"="12",
                                           "Autre raison"="13",
 )
-                                          
+
 ##vérification 
 
 table(chomage2020$CREACCP)
 table(chomage2020$raisonchangemploi)
-                                          
-                                                                             
-  ##II-Analyse de la base----
- ## tableau CSP et statut d 'activité 
+
+
+##II-Analyse de la base----
+## tableau CSP et statut d 'activité 
 
 tmp<-table(chomage2020$CSP,chomage2020$statutACT)
 tmprop<-lprop(tmp)
@@ -168,7 +168,7 @@ lprop(table(chomage2020$CSP,chomage2020$tauxdechômage))
 
 chisq.test(table(chomage2020$SEXE,chomage2020$tauxdechômage))
 chisq.test(table(chomage2020$CSP,chomage2020$tauxdechômage))
-write.table(tmprop,file = "excel_tableautaux de chomage sexe et csp .xls",sep = "\t")
+#write.table(tmprop,file = "excel_tableautaux de chomage sexe et csp .xls",sep = "\t")
 
 ##tableau tri-varié : sexe , age et taux de chomâge : taux de chômage en fonction du sexe et de l 'âge 
 
@@ -185,7 +185,7 @@ chisq.test(table(chomage2020$AGE5,chomage2020$tauxdechômage))
 #write.table(tmprop,file = "excel_tableautaux de chomage sexe et age .xls",sep = "\t")
 
 
- ## tableau tri varié : statut d 'act,, taux de chômage et csp 
+## tableau tri varié : statut d 'act,, taux de chômage et csp 
 freq(chomage2020$CSP)
 freq(chomage2020$statutACT)
 freq(chomage2020$tauxdechômage)
