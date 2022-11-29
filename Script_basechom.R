@@ -15,8 +15,10 @@ library(FactoMineR)
 
 ## I- recodage de la base de données ----
 
-## catégorie socio -professionnelle 
+## catégorie socio -professionnelle
+as_tibble(chomage2020)
 chomage2020
+colnames(chomage2020)
 mode(chomage2020$CSTOTR)
 chomage2020$CSP<-as.character(chomage2020$CSTOTR)
 chomage2020$CSP<-fct_recode(chomage2020$CSP,
@@ -107,7 +109,7 @@ chomage2020$raisonchangemploi<-fct_recode(chomage2020$raisonchangemploi,
                                           "Trouve l'ambiance de travail mauvaise, les relations de travail conflictuelles"="12",
                                           "Autre raison"="13",
 )
-
+chomage2020=sample_n(chomage2020, 1000)
 ##vérification 
 
 table(chomage2020$CREACCP)
@@ -198,5 +200,23 @@ chisq.test(table(chomage2020$statutACT,chomage2020$tauxdechômage))
 chisq.test(table(chomage2020$CSP,chomage2020$tauxdechômage))
 #write.table(tmprop,file = "excel_tableautaux de chomage csp et statut act  .xls",sep = "\t")
 
+## III- qques plots
 
+ggplot(chomage2020)+aes(x=statutACT)+geom_bar(aes(fill=statutACT))
 
+#ggplot(chomage2020)+geom_bar(aes(x = statutACT, fill=tauxdechômage))
+
+#ggplot(chomage2020)+geom_bar(aes(x = CSP,fill=tauxdechômage))
+
+ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=AGE))
+
+ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=AGE), position="fill")
+
+ggplot(subset(chomage2020, statutACT == "Actif occupé")
+)+geom_bar(aes(x=statutACT, fill=raisonchangemploi))
+
+ggplot(subset(chomage2020, statutACT == "Chômeur PSERE (Population sans Emploi à la Recherche d'un Emploi)")
+)+geom_bar(aes(x=AGE, fill=CSP))
+
+ggplot(subset(chomage2020, statutACT == "Actif occupé")
+)+geom_bar(aes(x=AGE, fill=CSP))
