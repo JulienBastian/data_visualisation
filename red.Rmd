@@ -23,27 +23,27 @@ library(FactoMineR)
 chomage2020=as_tibble(chomage2020)
 
 chomage2020$CSP<-as.character(chomage2020$CSTOTR)
-#chomage2020$CSP<-fct_recode(chomage2020$CSP,
-#                            "Non renseigné"="0",
-#                           "Agriculteurs exploitants"="1",
-#                            "Artisans, commerçants, et chefs d'entreprise"="2",
-#                            "Cadres et professions intellectuelles supérieures"="3",
-#                            "Professions intermédiaires"="4",
-#                            "Employés"="5",
-#                            "Ouvriers"="6",
-#                            "Inactifs avec activité professionnelle antérieure"="7",
-#                            "Autres personnes sans activité professionnelle"="8" )
+chomage2020$CSP<-fct_recode(chomage2020$CSP,
+                            "NR"="0",
+                           "Agriculteurs"="1",
+                            "Indépendants"="2",
+                            "Cadres"="3",
+                            "Prof inter"="4",
+                            "Employés"="5",
+                            "Ouvriers"="6",
+                            "Inactifs pro"="7",
+                          "Autres inactifs"="8" )
 
 chomage2020$statutACT<-as.character(chomage2020$ACTEU6)
-#chomage2020$statutACT=fct_explicit_na(chomage2020$statutACT, "null")
-#chomage2020$statutACT<-fct_recode(chomage2020$statutACT,
-#                                  "Sans objet" = "null",
-#                                  "Actif occupé" = "1",
-#                                  "Chômeur PSERE (Population sans Emploi à la Recherche d'un Emploi)"="3",
-#                                  "Autre chômeur BIT"="4",
-#                                  "Étudiant, élève, stagiaire en formation (inactifs)"="5",
-#                                  "Autres inactifs (dont retraités)"="6")
-#
+chomage2020$statutACT=fct_explicit_na(chomage2020$statutACT, "null")
+chomage2020$statutACT<-fct_recode(chomage2020$statutACT,
+                                  "Sans objet" = "null",
+                                  "Actif" = "1",
+                                  "Chômeur"="3",
+                                  "chômeur BIT"="4",
+                                  "Étudiant"="5",
+                                  "Autres inactifs"="6")
+
 
 chomage2020$AGE<-as.character(chomage2020$AGE5)
 #age au dernier jour de la semaine de référence
@@ -70,22 +70,22 @@ chomage2020$tauxdechômage<-fct_recode(chomage2020$tauxdechômage,
 chomage2020$raisonchangemploi<-as.character(chomage2020$CREACCP)
 chomage2020$raisonchangemploi=fct_explicit_na(chomage2020$raisonchangemploi, "null")
 chomage2020$raisonchangemploi<-fct_recode(chomage2020$raisonchangemploi,
-                                          "Sans objet (SOUA distinct de 1 et SOUB distinct de 1) ou non renseigné"="null",
-                                          "Risque de perdre ou va perdre son emploi actuel (y compris fin de contrats courts)"="1",
-                                          "Désire un emploi plus intéressant"="2",
-                                          "Veut un emploi plus stable (CDI)"="3",
-                                          "Veut travailler plus d'heures"="4",
-                                          "Désire un travail avec un rythme horaire plus adapté ou plus modulable"="5",
-                                          "Désire des conditions de travail moins pénibles ou plus adaptées à sa santé"="6",
-                                          "Désire augmenter ses revenus"="7",
-                                          "Désire diminuer son temps de transport"="8",
-                                          "Doit ou veut déménager"="9",
-                                          "Veut s'installer à son compte"="10",
-                                          "Veut changer de métier ou de secteur"="11",
-                                          "Trouve l'ambiance de travail mauvaise, les relations de travail conflictuelles"="12",
+                                          "Sans objet"="null",
+                                          "Perte d'emploi"="1",
+                                          "Emploi intéressant"="2",
+                                          "Emploi stable (CDI)"="3",
+                                          "Plus d'heures"="4",
+                                          "Horaires adaptées"="5",
+                                          "Conditions favorables"="6",
+                                          "Plus de revenus"="7",
+                                          "Réduire tmps transport"="8",
+                                          "Déménager"="9",
+                                          "Travail à son compte"="10",
+                                          "Changement métier"="11",
+                                          "Mauvaise ambiance"="12",
                                           "Autre raison"="13",
 )
-chomage2020=sample_n(chomage2020, 1000)
+#chomage2020=sample_n(chomage2020, 1000)
 ```
 
 ## Graphiques
@@ -100,10 +100,6 @@ ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=AGE))
 
 ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=AGE), position="fill")
 
-ggplot(subset(chomage2020, statutACT == "3")
-)+geom_bar(aes(x=AGE, fill=CSP))
-
-ggplot(subset(chomage2020, statutACT == "1"))+geom_bar(aes(x=AGE, fill=CSP))
 
 ```
 
@@ -113,6 +109,10 @@ Le premier représente la répartition de la population selon le statut d'activi
 On peut également insérer des graphiques sans le code qui les génére comme suit.
 ```{r noecho, echo=FALSE}
 
+ggplot(subset(chomage2020, statutACT == "Chômeur")
+)+geom_bar(aes(x=AGE, fill=CSP))
+
+ggplot(subset(chomage2020, statutACT == "Actif"))+geom_bar(aes(x=AGE, fill=CSP))
 ```
 
 Le premier représente l'age et la CSP pour la population des chomeurs PSERE et le second la même chose pour les actifs occupés.
