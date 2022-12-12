@@ -141,6 +141,86 @@ ggplot(subset(chomage2020, statutACT == "Actif"))+geom_bar(aes(x=AGE, fill=CSP))
 ```
 
 Le premier représente l'age et la CSP pour la population des chomeurs PSERE et le second la même chose pour les actifs occupés.
+## Général
+
+```{r général}
+#histogrammes des csp
+
+#1
+ggplot(chomage2020)+geom_bar(aes(x = CSP))
+
+#2
+ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=AGE))
+
+#3
+ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=statutACT))
+
+#4
+ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=AGE), position="fill")
+
+#5
+ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=statutACT), position="fill")
+
+#6
+ggplot(chomage2020)+geom_boxplot(aes(x=CSP, y=Htravaillées))+ylim(0, 80)
+
+#7
+ggplot(chomage2020)+geom_boxplot(aes(x=CSP, y=Hsouhaitées))+ylim(0, 80)
+
+##histogrammes des ages
+
+#8
+ggplot(chomage2020)+geom_bar(aes(x = AGE))
+
+#9
+ggplot(chomage2020)+geom_bar(aes(x = AGE, fill=CSP))
+
+#10
+ggplot(chomage2020)+geom_bar(aes(x = AGE, fill=statutACT))
+
+#11
+ggplot(chomage2020)+geom_bar(aes(x = AGE, fill=CSP), position="fill")
+
+#12
+ggplot(chomage2020)+geom_bar(aes(x = AGE, fill=statutACT), position="fill")
+
+#13
+ggplot(chomage2020)+geom_boxplot(aes(x=AGE, y=Htravaillées))+ylim(0, 80)
+
+#14
+ggplot(chomage2020)+geom_boxplot(aes(x=AGE, y=Hsouhaitées))+ylim(0, 80)
+
+#15
+ggplot(chomage2020)+geom_bar(aes(x = statutACT))
+
+#16
+ggplot(chomage2020)+geom_bar(aes(x = statutACT, fill=CSP))
+
+#17
+ggplot(chomage2020)+geom_bar(aes(x = statutACT, fill=AGE))
+
+#18
+ggplot(chomage2020)+geom_bar(aes(x = statutACT, fill=CSP), position="fill")
+
+#19
+ggplot(chomage2020)+geom_bar(aes(x = statutACT, fill=AGE), position="fill")
+
+#20
+ggplot(chomage2020)+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
+
+
+##chomeur vs actif occupés
+
+#21
+ggplot(chomage2020[chomage2020$statutACT=="Actif occupés" | chomage2020$statutACT=="Chômeur",])+geom_bar(aes(x = CSP, fill=statutACT), position = "fill")
+
+#22
+ggplot(chomage2020[chomage2020$statutACT=="Actif occupés" | chomage2020$statutACT=="Chômeur",])+geom_bar(aes(x = AGE, fill=statutACT), position = "fill")
+
+
+```
+
+
 ## Niveaux  de diplome
 
 ```{r Diplome}
