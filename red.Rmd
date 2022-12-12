@@ -288,3 +288,43 @@ ggplot(subset(chomage2020, statutACT=="Chômeur" | statutACT=="Actif occupés", 
 ggplot(subset(chomage2020, statutACT=="Chômeur"))+geom_bar(aes(x=diplome, fill=statutACT))
 ```
 
+## Sexe
+
+```{r Sexe}
+##histogramme des sexes
+
+#38
+ggplot(chomage2020)+geom_bar(aes(x = SEXE))
+
+#39
+ggplot(chomage2020)+geom_bar(aes(x = SEXE, fill=AGE))
+
+#40
+ggplot(chomage2020)+geom_bar(aes(x = SEXE, fill=statutACT))
+
+#41
+ggplot(chomage2020)+geom_bar(aes(x = SEXE, fill=AGE), position="fill")
+
+#42
+ggplot(chomage2020)+geom_bar(aes(x = SEXE, fill=statutACT), position="fill")
+
+##boites à moustaches et densité pour heures travaillées et heures souhaitées travaillées
+
+#43
+ggplot(chomage2020)+geom_boxplot(aes(x=SEXE, y=Htravaillées))+ylim(0, 80)
+
+#44
+ggplot(chomage2020)+geom_boxplot(aes(x=SEXE, y=Hsouhaitées))+ylim(0, 80)
+
+#45
+ggplot(chomage2020[chomage2020$SEXE=="Feminin",])+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
+
+#46
+ggplot(chomage2020[chomage2020$SEXE=="Masculin",])+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
+
+#47
+ggplot(chomage2020)+geom_density(aes(Htravaillées, color=SEXE),bw=3)+xlim(0, 80)
+
+ggplot(chomage2020)+geom_density(aes(Hsouhaitées, color=SEXE),bw=3)+xlim(0, 80)
+```
+
