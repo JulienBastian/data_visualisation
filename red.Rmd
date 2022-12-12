@@ -19,28 +19,29 @@ chomage2020 <-read.csv("FD_csv_EEC20.csv",sep = ";")
 library(questionr)
 library(tidyverse)
 library(FactoMineR)
-
+#chomage2020=sample_n(chomage2020, 1000)
 chomage2020=as_tibble(chomage2020)
 
 chomage2020$CSP<-as.character(chomage2020$CSTOTR)
 chomage2020$CSP<-fct_recode(chomage2020$CSP,
-                            "NR"="0",
-                           "Agriculteurs"="1",
+                            "0"="0",
                             "Indépendants"="2",
+                            "Agriculteurs"="1",
                             "Cadres"="3",
                             "Prof inter"="4",
                             "Employés"="5",
                             "Ouvriers"="6",
-                            "Inactifs pro"="7",
-                          "Autres inactifs"="8" )
+                            "Inactifs"="7",
+                            "Inactifs"="8" )
+
+chomage2020=chomage2020[!is.na(chomage2020$ACTEU6), ]
 
 chomage2020$statutACT<-as.character(chomage2020$ACTEU6)
-chomage2020$statutACT=fct_explicit_na(chomage2020$statutACT, "null")
 chomage2020$statutACT<-fct_recode(chomage2020$statutACT,
                                   "Sans objet" = "null",
-                                  "Actif" = "1",
+                                  "Actif occupés" = "1",
                                   "Chômeur"="3",
-                                  "chômeur BIT"="4",
+                                  "Chômeur"="4",
                                   "Étudiant"="5",
                                   "Autres inactifs"="6")
 
@@ -64,13 +65,13 @@ chomage2020$tauxdechômage<-fct_recode(chomage2020$tauxdechômage,
                                       "Actif au sens du BIT/inactif"="2",
 )
 
-
-
+chomage2020=chomage2020[chomage2020$CSP!="0",]
+chomage2020=chomage2020[!is.na(chomage2020$CSP), ]
 ## raison changement d'emploi (CREACCP)
 chomage2020$raisonchangemploi<-as.character(chomage2020$CREACCP)
 chomage2020$raisonchangemploi=fct_explicit_na(chomage2020$raisonchangemploi, "null")
 chomage2020$raisonchangemploi<-fct_recode(chomage2020$raisonchangemploi,
-                                          "Sans objet"="null",
+#                                          "Sans objet"="null",
                                           "Perte d'emploi"="1",
                                           "Emploi intéressant"="2",
                                           "Emploi stable (CDI)"="3",
@@ -85,7 +86,31 @@ chomage2020$raisonchangemploi<-fct_recode(chomage2020$raisonchangemploi,
                                           "Mauvaise ambiance"="12",
                                           "Autre raison"="13",
 )
-#chomage2020=sample_n(chomage2020, 1000)
+chomage2020$diplome=as.character(chomage2020$DIP11)
+chomage2020$diplome=fct_recode(chomage2020$diplome,
+           "Licence et +"="10",  
+           "Licence et +"="11",
+           "Bac +2"="30",
+           "Bac +2"="31",
+           "Bac +2"="33",
+           "Baccalauréat "="41",
+           "Baccalauréat "="42",
+           "CAP/BEP"="50",
+           "Brevet"="60",
+           "Certificat d'ét."="70",
+           "Aucun"="71"
+    )
+
+chomage2020$SEXE=as.character(chomage2020$SEXE)
+chomage2020$SEXE=fct_recode(chomage2020$SEXE,
+                            "Masculin"="1",
+                            "Feminin"="2"
+                            
+                            )
+chomage2020$Htravaillées=chomage2020$HHCE
+chomage2020$Hsouhaitées=chomage2020$HPLUSA
+
+
 ```
 
 ## Graphiques
@@ -116,3 +141,70 @@ ggplot(subset(chomage2020, statutACT == "Actif"))+geom_bar(aes(x=AGE, fill=CSP))
 ```
 
 Le premier représente l'age et la CSP pour la population des chomeurs PSERE et le second la même chose pour les actifs occupés.
+## Niveaux  de diplome
+
+```{r Diplome}
+##histogramme des diplomes
+
+#23
+ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome))
+
+#24
+ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=CSP))
+
+#25
+ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=AGE))
+
+#26
+ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=statutACT))
+
+#27
+ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=CSP), position="fill")
+
+#28
+ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=AGE), position="fill")
+
+#29
+ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=statutACT), position="fill")
+
+#Densité et boites à moustaches pour heures souhaitées et heures travaillées pour chaque niv de diplome
+
+#30
+ggplot(subset(chomage2020, diplome!="NA"))+geom_boxplot(aes(x=diplome, y=Htravaillées))+ylim(0, 80)
+
+#31
+ggplot(subset(chomage2020, diplome!="NA"))+geom_boxplot(aes(x=diplome, y=Hsouhaitées))+ylim(0, 80)
+
+
+#32
+ggplot(subset(chomage2020, diplome=="Licence et +"))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
+
+#33
+ggplot(subset(chomage2020, diplome=="Bac +2"))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
+
+#on a pas de données pour baccalauréat
+#ggplot(subset(chomage2020, diplome=="Baccalauréat"))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
+
+#34
+ggplot(subset(chomage2020, diplome=="CAP/BEP"))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
+
+#35
+ggplot(subset(chomage2020, diplome=="Brevet"))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
+
+#36
+ggplot(subset(chomage2020, diplome=="Certificat d'ét."))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
+
+#37
+ggplot(subset(chomage2020, diplome=="Aucun"))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
+
+ggplot(subset(chomage2020, statutACT=="Chômeur" | statutACT=="Actif occupés"))+geom_bar(aes(x=diplome, fill=statutACT))
+
+ggplot(subset(chomage2020, statutACT=="Chômeur" | statutACT=="Actif occupés"))+geom_bar(aes(x=diplome, fill=statutACT), position="fill")
+
+ggplot(subset(chomage2020, statutACT=="Chômeur" | statutACT=="Actif occupés"))+geom_bar(aes(x=diplome, fill=statutACT), position=position_dodge())
+
+ggplot(subset(chomage2020, statutACT=="Chômeur" | statutACT=="Actif occupés", diplome!="NA"))+geom_bar(aes(x=diplome, color=statutACT, fill=AGE), position=position_dodge())
+
+ggplot(subset(chomage2020, statutACT=="Chômeur"))+geom_bar(aes(x=diplome, fill=statutACT))
+```
+
