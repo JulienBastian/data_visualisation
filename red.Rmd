@@ -375,5 +375,3 @@ Toutefois, nous avons souvent eu l’impression que notre projet reposait unique
 [5] Anglaret, D. (2002). Les plus de 50 ans en marge de l'emploi et du chômage. Retraite et société, no<(sup> 37), 97-109. https://doi.org/10.3917/rs.037.0097
 
 [6] Batard, P., Ferrari, N. & Saillard, E. (2012). Le chômage des jeunes : quel diagnostic ?. Économie & prévision, 200-201, 207-215. https://doi.org/10.3917/ecop.200.0207
-
-[7] Helena Massadier (2020), Le taux de chômage des femmes françaises : un indicateur en trompe-l'oeil, Science Po, Chaire pour l’emploi et l’entrepreuriat des femmes https://www.sciencespo.fr/women-business/fr/actualites/le-taux-de-chomage-des-femmes-francaises-un-indicateur-en-trompe-l-oeil.html 
