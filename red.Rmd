@@ -311,10 +311,11 @@ ggplot(chomage2020)+geom_boxplot(aes(x=SEXE, y=Htravaillées))+ylim(0, 80)+ ggti
 ```
 
 ```{r Sexe 4, message=FALSE, warning=FALSE}
-ggplot(chomage2020)+geom_boxplot(aes(x=SEXE, y=Hsouhaitées))+ylim(0, 80)+ ggtitle("graphique 13: Nombre d'heures souhaitées par sexe
+ggplot(chomage2020)+geom_boxplot(aes(x=SEXE, y=Hsouhaitées))+ylim(0, 80)+ ggtitle("graphique 14: Nombre d'heures souhaitées par sexe
 ") +
   xlab("Sexe") + ylab("Nombre d'heures") + align
 ```
+
 En termes de nombre d’heures, on constate que les hommes travaillent un peu plus (40 heures) que les femmes (environ 37 heures). Aussi en heures souhaitées, les hommes déclarent vouloir travailler plus d’heures que les femmes. Les femmes travaillent le plus souvent à temps partiel. Loin d’être “choisi” par les femmes (pour libérer du temps nécessaire aux tâches domestiques et aux soins apportés aux enfants), le travail à temps partiel est souvent imposé par l’employeur au moment de l’embauche. En effet, les trois dernières décennies ont vu une augmentation des créations d’emploi à temps partiel dans le secteur privé (principalement la restauration, le commerce, l’hôtellerie et les services aux entreprises et particuliers). Les femmes peu ou pas qualifiées travaillant dans ces secteurs acceptent des emplois à temps partiel (qui sont parfois transformés en emplois à temps plein), souvent par peur de se trouver sans emploi.
 
 Les raisons pour lesquelles les femmes font moins d’heures sont souvent liées par des problèmes d’ordre familial (tâches ménagères et présence d’enfants dans la famille)
