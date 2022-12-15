@@ -4,14 +4,15 @@ output:
   html_document:
     toc: true
     theme: united
+    
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r cars, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
-chomage2020 <-read.csv("FD_csv_EEC20.csv",sep = ";")
+```{r préparation des données, echo=FALSE, results='hide', message=FALSE, warning=FALSE}
+chomage2020 <-read.csv(file.path("données_chomage.csv"),sep = ";")
 library(questionr)
 library(tidyverse)
 library(FactoMineR)
@@ -30,6 +31,11 @@ chomage2020$CSP<-fct_recode(chomage2020$CSP,
                             "Inactifs"="7",
                             "Inactifs"="8" )
 
+chomage2020=chomage2020[chomage2020$CSP!="0",]
+chomage2020=chomage2020[!is.na(chomage2020$CSP), ]
+chomage2020$CSP=as.factor(chomage2020$CSP)
+
+
 chomage2020=chomage2020[!is.na(chomage2020$ACTEU6), ]
 
 chomage2020$statutACT<-as.character(chomage2020$ACTEU6)
@@ -41,6 +47,7 @@ chomage2020$statutACT<-fct_recode(chomage2020$statutACT,
                                   "Étudiant"="5",
                                   "Autres inactifs"="6")
 
+chomage2020$statutACT=as.factor(chomage2020$statutACT)
 
 chomage2020$AGE<-as.character(chomage2020$AGE5)
 #age au dernier jour de la semaine de référence
@@ -52,7 +59,7 @@ chomage2020$AGE<-fct_recode(chomage2020$AGE,
                             "50 à 59 ans "="50",
                             "60 ans ou +"="60",)
 
-
+chomage2020$AGE=as.factor(chomage2020$AGE)
 ## Actif ou non actif (ACTIF)
 
 chomage2020$tauxdechômage<-as.character(chomage2020$ACTIF)
@@ -60,28 +67,8 @@ chomage2020$tauxdechômage<-fct_recode(chomage2020$tauxdechômage,
                                       "Actif au sens du BIT/Actif"="1",
                                       "Actif au sens du BIT/inactif"="2",
 )
+chomage2020$statutACT=as.factor(chomage2020$statutACT)
 
-chomage2020=chomage2020[chomage2020$CSP!="0",]
-chomage2020=chomage2020[!is.na(chomage2020$CSP), ]
-## raison changement d'emploi (CREACCP)
-chomage2020$raisonchangemploi<-as.character(chomage2020$CREACCP)
-chomage2020$raisonchangemploi=fct_explicit_na(chomage2020$raisonchangemploi, "null")
-chomage2020$raisonchangemploi<-fct_recode(chomage2020$raisonchangemploi,
-#                                          "Sans objet"="null",
-                                          "Perte d'emploi"="1",
-                                          "Emploi intéressant"="2",
-                                          "Emploi stable (CDI)"="3",
-                                          "Plus d'heures"="4",
-                                          "Horaires adaptées"="5",
-                                          "Conditions favorables"="6",
-                                          "Plus de revenus"="7",
-                                          "Réduire tmps transport"="8",
-                                          "Déménager"="9",
-                                          "Travail à son compte"="10",
-                                          "Changement métier"="11",
-                                          "Mauvaise ambiance"="12",
-                                          "Autre raison"="13",
-)
 chomage2020$diplome=as.character(chomage2020$DIP11)
 chomage2020$diplome=fct_recode(chomage2020$diplome,
            "Licence et +"="10",  
@@ -96,202 +83,296 @@ chomage2020$diplome=fct_recode(chomage2020$diplome,
            "Certificat d'ét."="70",
            "Aucun"="71"
     )
+chomage2020$diplome=as.factor(chomage2020$diplome)
 
 chomage2020$SEXE=as.character(chomage2020$SEXE)
 chomage2020$SEXE=fct_recode(chomage2020$SEXE,
                             "Masculin"="1",
                             "Feminin"="2"
-                            
                             )
+chomage2020$SEXE=as.factor(chomage2020$SEXE)
 chomage2020$Htravaillées=chomage2020$HHCE
 chomage2020$Hsouhaitées=chomage2020$HPLUSA
 
+align=theme(plot.title = element_text(hjust = 0.5))
+
 
 ```
+## Introduction
 
+Dans le cadre de notre travail universitaire de Projet RStudio, nous devons choisir, modéliser des données statistiques avec les outils R, les analyser, et fournir un rendu d’analyse en travail de groupe, faisant également état de notre organisation collective et de notre répartition de travail. Ce point est abordé en détail dans notre conclusion. Mais contextualisons tout d’abord notre support de travail, en décrivant les méthodes de l’INSEE, et ses modalités d’enquête.
+  
+L’enquête Emploi de l’INSEE, fournit des données sur le chômage selon les critères du BIT (Bureau International du Travail). Elle permet en outre de décrire précisément les personnes selon leur statut d’activité, les conditions d’emploi, ou les situations de non-emploi. Structure mise en place en 1950, elle reconduit ses enquêtes statistiques d’année en année. Les données collectent les informations autour des thèmes suivants : description d’un ménage, statut d’activité, description de l’emploi principal en cours, le niveau d’étude, l’origine sociale et géographique, la trajectoire sur le marché du travail au cours des 12 derniers mois, etc.
+
+### Support et modalités d’enquête
+Enquête INSEE : Activité, emploi et chômage en 2020 (Enquête emploi en continu – fichier détail). Données parues le 7/06/21. L’enquête porte sur l’unité statistique par individus, sur la population des 15/89 ans vivant en logement ordinaire. Elle recouvre la presque totalité du territoire français, sur une année complète.
+
+### Organisation de l'enquête 
+Méthode d’enquête : L’unité de comptage de l’enquête est le logement. La situation des enquêtés est à décrire sur une semaine de référence, à partir de laquelle les enquêteurs disposent de 3 semaines pour accomplir leur mission, et les enquêtés pour y répondre. Ceci pour assurer la validité des informations collectées (ex. : domicile existant). Elle est dans un premier temps effectuée en face à face, puis peut se dérouler par téléphone, ou internet.
+
+### Support d’enquête 
+Il s’agit de questionnaires d’enquête précis. Ils sont individuels. Certains critères d’enquêtes sont prédéfinis par l’enquêteur (catégorie de logement). Les données sont accessibles ou restreintes, selon le cadre d’étude dans lesquelles elles sont traitées, pour des raisons de confidentialité d’information. Dans les nombreuses données disponibles dans les statistiques de l’INSEE, nous avons choisi de sélectionner les variables suivantes :
+ 
+* Le taux de chômage par tranche d’âge (AGE)
+* Le sexe des chômeurs (SEXE)
+* Les catégories de CSP des enquêtés en condition de chômage (CSP)
+* La raison de recherche d’un autre emploi (mobilité)
+* Le secteur d’activité professionnel des chômeurs (statutACT)
+* Le nombre d'heure de travail effectuées dans une semaine (Htravaillées)
+* Le nombre d'heure de travail souhaitées dans une semaine (Hsouhaitées)
+
+A noter également, pour toutes nos visualisations nous avons
+
+Champs : personnes de 15 ans ou + vivant en logement ordinaire ( France hors Mayotte)
+
+Source : Enquête INSEE : Activité, emploi et chômage en 2020
+
+
+### Analyse sociologique 
+Nous avons collecté les données ci-dessus, car souhaitons répondre à la question suivante : quels sont les facteurs éclairant l’inactivité professionnelle en France. C’est pourquoi nous nous proposons d’organiser notre réflexion de travail, en présentant d’abord des informations généralistes sur l’inactivité professionnelle. Une fois posé le contexte général de l’analyse, nous nous attacherons dans un second temps à comprendre comment le niveau de diplôme est influent dans les variables du chômage. Enfin, nous chercherons à savoir si le fait d’être un homme ou une femme est significatif dans son positionnement dans le monde du travail. Nous souhaitons donner un aperçu généraliste de ces phénomènes sur l’année 2020.
 
 ## Général
 
-```{r général}
-#histogrammes des csp
-
-#1
-ggplot(chomage2020)+geom_bar(aes(x = CSP))
-
-#2
-ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=AGE))
-
-#3
-ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=statutACT))
-
-#4
-ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=AGE), position="fill")
-
-#5
-ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=statutACT), position="fill")
-
-#6
-ggplot(chomage2020)+geom_boxplot(aes(x=CSP, y=Htravaillées))+ylim(0, 80)
-
-#7
-ggplot(chomage2020)+geom_boxplot(aes(x=CSP, y=Hsouhaitées))+ylim(0, 80)
-
-##histogrammes des ages
-
-#8
-ggplot(chomage2020)+geom_bar(aes(x = AGE))
-
-#9
-ggplot(chomage2020)+geom_bar(aes(x = AGE, fill=CSP))
-
-#10
-ggplot(chomage2020)+geom_bar(aes(x = AGE, fill=statutACT))
-
-#11
-ggplot(chomage2020)+geom_bar(aes(x = AGE, fill=CSP), position="fill")
-
-#12
-ggplot(chomage2020)+geom_bar(aes(x = AGE, fill=statutACT), position="fill")
-
-#13
-ggplot(chomage2020)+geom_boxplot(aes(x=AGE, y=Htravaillées))+ylim(0, 80)
-
-#14
-ggplot(chomage2020)+geom_boxplot(aes(x=AGE, y=Hsouhaitées))+ylim(0, 80)
-
-#15
-ggplot(chomage2020)+geom_bar(aes(x = statutACT))
-
-#16
-ggplot(chomage2020)+geom_bar(aes(x = statutACT, fill=CSP))
-
-#17
-ggplot(chomage2020)+geom_bar(aes(x = statutACT, fill=AGE))
-
-#18
-ggplot(chomage2020)+geom_bar(aes(x = statutACT, fill=CSP), position="fill")
-
-#19
-ggplot(chomage2020)+geom_bar(aes(x = statutACT, fill=AGE), position="fill")
-
-#20
-ggplot(chomage2020)+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
+#### Pour cette première partie, nous avons fait le choix de décrire généralement notre population . En ciblant notamment la répartition des catégories socio- professionnelles chez l ‘ensemble de nos enquêtés.
 
 
-##chomeur vs actif occupés
 
-#21
-ggplot(chomage2020[chomage2020$statutACT=="Actif occupés" | chomage2020$statutACT=="Chômeur",])+geom_bar(aes(x = CSP, fill=statutACT), position = "fill")
-
-#22
-ggplot(chomage2020[chomage2020$statutACT=="Actif occupés" | chomage2020$statutACT=="Chômeur",])+geom_bar(aes(x = AGE, fill=statutACT), position = "fill")
-
-
+```{r général 1 , message=FALSE, warning=FALSE}
+ggplot(chomage2020)+geom_bar(aes(x = CSP))+ggtitle("Graphique 1 : Répartition des catégories socioprofessionnelles (CSP)") +
+  xlab("CSP") + ylab("Effectif") + align
 ```
+
+Pour ce premier histogramme nous avons fait le choix de nous intéresser à la répartition des catégories socio-professionnelles chez les enquêtés de notre base de données.
+
+La singularité la plus marquée concerne les inactifs. En effet, on note que les inactifs dépassent de plus de 2/3 les autres catégories socio-professionnelles. Puis nous pouvons noter que la proportion des professions intermédiaires et des employés est similairement la même.
+
+Le poids des ouvriers est sensiblement moindre que les professions intermédiaires et les employés, puis nous retrouvons les indépendants et les agriculteurs qui sont faiblement représentés.
+
+
+```{r général 2, message=FALSE, warning=FALSE}
+ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=AGE), position="fill")+ggtitle("Graphique 2 : Répartition des CSP en fonction de l'âge") +
+  xlab("CSP") + ylab("Proportion") +align
+```
+
+```{r général 3, message=FALSE, warning=FALSE}
+ggplot(chomage2020)+geom_bar(aes(x = CSP, fill=statutACT))+ggtitle("Graphique complémentaire : répartition des CSP en fonction du statut d'activité") +
+  xlab("CSP") + ylab("Proportion") +align
+```
+
+Pour ce graphique, nous avons trouvé intéressant de pouvoir croiser les catégories socio-professionnelles avec l’âge afin d’avoir une idée sur les variations pouvant exister.
+
+Dans un premier temps, nous pouvons constater que les + de 60 ans représentent plus de 60 % des inactifs. Ce chiffre peut s’expliquer par le vieillissement de la population et l’ouverture des droits à la retraite fixé à 62 ans et de la pré-retraite à 60 ans.
+
+Cependant nous pouvons noter que malgré un départ à la retraite fixé à 62 ans, un grand nombre de seniors restent actifs et en emploi (environ 20% des agriculteurs sont des personnes de plus de 60 ans ,18 % des indépendants, 15% des cadres ,12% des employés et environ 8% des professions intermédiaires sont des personnes de plus de 60 ans). Aussi, on note que les cadres et les indépendants sont amenés à travailler plus longtemps que les professions intermédiaires, les employés et les ouvriers.
+
+En liant ce graphique avec le graphique 9 croisant le niveau de diplôme avec celui des enquêtés, nous pouvons faire le constat que les plus de 60 ans sont les moins diplômés. Aussi nous pouvons émettre l’hypothèse que les employés et les ouvriers sont rentrés plus rapidement dans le monde du travail et ont pu par conséquent bénéficier de leur retraite à taux plein dès 62 ans.
+
+Si l’on s’attarde sur les autres tranches d'âge, on note que les 30-39 ans, les 40-49 ans et les 50-59 ans sont répartis presque similairement chez les agriculteurs, les indépendants, les cadres, les professions intermédiaires et les employés. Chez les inactifs, la part des 50 -59 ans est cependant plus représentée.
+
+D’après des graphiques établis par l’INSEE[1], nous pouvons expliquer ce taux par le fait qu’après 55 ans, un grand nombre de personnes se retrouvent au chômage ou en pré-retraite.
+
+Pour finir, si nous nous intéressons aux 15-29 ans nous notons que cette tranche d’âge est la deuxième catégorie la plus présente chez les inactifs. Ce chiffre s’explique notamment par le fait que cette catégorie comprend  les étudiants mais également par le fait que les jeunes rencontrent des difficultés à rentrer dans le marché du travail notamment chez les jeunes adultes ayant un faible niveau d’études. De plus, « les jeunes connaissent plusieurs spécificités dans leur accès à l’emploi. S’ils y accèdent relativement rapidement en comparaison des individus plus âgés, ils le conservent moins longtemps. Aussi, les périodes de chômage et de contrat court sont pour beaucoup un passage obligatoire »[2]
+
+
+```{r général 4, message=FALSE, warning=FALSE}
+ggplot(subset(chomage2020, CSP!="Inactifs"))+geom_boxplot(aes(x=CSP, y=Htravaillées))+ylim(0, 80) +ggtitle("Graphique 3 : Nombre d'heures travaillées par CSP") +
+  xlab("CSP") + ylab("Heures travaillées") + align
+```
+
+```{r général 5, message=FALSE, warning=FALSE}
+ggplot(subset(chomage2020, CSP!="Inactifs"))+geom_boxplot(aes(x=CSP, y=Hsouhaitées))+ylim(0, 80) + ggtitle("Graphique 4 : Nombre d'heures souhaitées par CSP") +
+  xlab("CSP") + ylab("Heures souhaitées") + align
+```
+
+```{r général 6, message=FALSE, warning=FALSE}
+ggplot(chomage2020[chomage2020$statutACT=="Actif occupés" | chomage2020$statutACT=="Chômeur",])+geom_bar(aes(x = CSP, fill=statutACT), position = "fill") + ggtitle("Graphique 5 : Répartition du statut d'activité par CSP") +
+  xlab("CSP") + ylab("Proportion") + align
+```
+
+Pour la construction de ces graphiques, nous avons émis l’hypothèse que la différence entre le nombre d’heures souhaitées chez les catégories socio-professionnelles et le nombre d’heures travaillées pouvait avoir un impact sur l'activité des individus.
+
+La base de données nous a permis de pouvoir mesurer le temps de travail effectif sur un échantillon donné.
+
+Nous pouvons noter que les agriculteurs, les indépendants et les cadres ont un temps de travail supérieur à la durée légale du travail. Si l’on s’attarde un peu plus sur les chiffres, on note que les agriculteurs sont les personnes qui travaillent le plus avec une durée hebdomadaire s’articulant autour de 55 heures alors que le nombre d’heures souhaitées serait de 42 heures. Ils sont suivis de près par les indépendants qui sont amenés à travailler 50 heures par semaine contre un nombre d’heures souhaitées de 40 heures. Puis on retrouve la catégorie des cadres qui travaillent 40 heures correspondant aux nombres d’heures souhaitées. Les employés quant à eux travaillent 35 heures. Pour les professions intermédiaires et les ouvriers, on note que la tendance s’inverse. En effet, ces derniers travaillent moins d’heures que le nombre d’heures souhaitées (Les professions intermédiaires travaillent 37 heures contre 40 heures souhaitées, et les ouvriers travaillent 36 heures contre 40 souhaitées).
+
+Aussi, si l'on se réfère au graphique portant sur le chômage (graphique 5), on note que les catégories socio-professionnelles les plus touchées par le chômage sont les ouvriers, les employés et les professions intermédiaires.
+
+Ces inégalités peuvent s’expliquer par le niveau d’études, par le sexe mais également par le marché du travail. En effet, on note que les catégories touchées par le plus grand nombre de travail sont les catégories travaillant moins que le nombre d’heures souhaitées. Aussi, nous pouvons émettre l’hypothèse que ces catégories socio-professionnelles sont  amenées à signer des contrats précaires (des contrats à durée déterminée, des contrats d’intérimaires ) .En effet, depuis ces dernières décennies, les employés et les ouvriers sont soumis «  à la précarisation structurelle de l’emploi que l’on peut décrire à plusieurs  niveaux : le niveau des contrats de travail , le niveau des temps de travails avec une augmentation des contrats à temps partiels  et des contrats à des temps de travails flexibles , continus et décalés »[3]. Aussi cette configuration du travail, fragilise l’activité des salariés et les soumet à un risque plus accru d’être inactifs ou chômeurs.
+
+```{r général 7, message=FALSE, warning=FALSE}
+ggplot(chomage2020)+geom_bar(aes(x = statutACT, fill=AGE)) + ggtitle("Graphique 6 : Répartition des âges par CSP") +
+  xlab("CSP") + ylab("Âge") + align
+```
+
+Pour ce graphique, nous avons décidé de croiser l’âge avec le statut d’activité. Si l’on décide de s’attarder sur les chômeurs et les autres inactifs, nous pouvons noter que pour les chômeurs, les 15-29 ans représentent le taux le plus important et que chez les autres inactifs, ceux sont les plus de 60 ans et les personnes de 50 à 59 ans qui sont le plus représentés.
+
+Aussi nous pouvons émettre l’hypothèse que l’âge à un impact sur le statut d’activité et le taux du chômage. En effet, d’après une étude menée par Pôle emploi, l’âge moyen des demandeurs d’emploi n’a fait que croître ces dernières années et une grande majorité des inactifs ou chômeurs seraient âgés de plus de 50 ans. [4]Aussi après 50 ans, un nombre important de personnes sont amenées à faire valoir leur droit au chômage ou à la préretraite. « Après 50 ans, les chômeurs sont très souvent des chômeurs de longue durée. La longévité au chômage des seniors s’explique par la faiblesse des embauches à cet âge et par la difficulté de réinsertions en emploi »[5].
+
+Si l’on s’attarde sur 15-29 ans, on peut expliquer le taux de chômage par « la difficulté des jeunes à se positionner sur le marché du travail, la difficulté d’insertion, les différentes trajectoires d’insertion, la précarisation et la durée plus courte des contrats de travail, ect. » [6] .Aussi nous pouvons dire que l’âge a une incidence sur le statut d’activité et sur le taux de chômage.
+
 
 ## Niveaux  de diplome
 
-```{r Diplome}
-##histogramme des diplomes
+#### Pour cette deuxième partie, nous allons faire un focus sur le niveau de diplôme pour préciser son impact sur le chômage et plus largement sur l’inactivité.
 
-#23
-ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome))
-
-#24
-ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=CSP))
-
-#25
-ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=AGE))
-
-#26
-ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=statutACT))
-
-#27
-ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=CSP), position="fill")
-
-#28
-ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=AGE), position="fill")
-
-#29
-ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=statutACT), position="fill")
-
-#Densité et boites à moustaches pour heures souhaitées et heures travaillées pour chaque niv de diplome
-
-#30
-ggplot(subset(chomage2020, diplome!="NA"))+geom_boxplot(aes(x=diplome, y=Htravaillées))+ylim(0, 80)
-
-#31
-ggplot(subset(chomage2020, diplome!="NA"))+geom_boxplot(aes(x=diplome, y=Hsouhaitées))+ylim(0, 80)
-
-
-#32
-ggplot(subset(chomage2020, diplome=="Licence et +"))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
-
-#33
-ggplot(subset(chomage2020, diplome=="Bac +2"))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
-
-#on a pas de données pour baccalauréat
-#ggplot(subset(chomage2020, diplome=="Baccalauréat"))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
-
-#34
-ggplot(subset(chomage2020, diplome=="CAP/BEP"))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
-
-#35
-ggplot(subset(chomage2020, diplome=="Brevet"))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
-
-#36
-ggplot(subset(chomage2020, diplome=="Certificat d'ét."))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
-
-#37
-ggplot(subset(chomage2020, diplome=="Aucun"))+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
-
-ggplot(subset(chomage2020, statutACT=="Chômeur" | statutACT=="Actif occupés"))+geom_bar(aes(x=diplome, fill=statutACT))
-
-ggplot(subset(chomage2020, statutACT=="Chômeur" | statutACT=="Actif occupés"))+geom_bar(aes(x=diplome, fill=statutACT), position="fill")
-
-ggplot(subset(chomage2020, statutACT=="Chômeur" | statutACT=="Actif occupés"))+geom_bar(aes(x=diplome, fill=statutACT), position=position_dodge())
-
-ggplot(subset(chomage2020, statutACT=="Chômeur" | statutACT=="Actif occupés", diplome!="NA"))+geom_bar(aes(x=diplome, color=statutACT, fill=AGE), position=position_dodge())
-
-ggplot(subset(chomage2020, statutACT=="Chômeur"))+geom_bar(aes(x=diplome, fill=statutACT))
+```{r Diplome 1, message=FALSE, warning=FALSE}
+ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome)) + ggtitle("Graphique 7: Répartition des enquêtés selon leur niveau de diplôme le plus haut
+") +
+  xlab("Niveau de diplôme") + ylab("Effectif") + align
 ```
+
+ Avec cet histogramme, nous pouvons voir la répartition de la population des enquêtés selon le niveau le plus élevé de leur diplôme. Nous remarquons que les plus nombreux sont les détenteurs d’un diplôme professionnalisant de type CAP/BEP (68000 personnes), suivis des individus ayant obtenu le Baccalauréat (57000) et des possesseurs d’un diplôme de licence et plus (55000).
+
+Par ailleurs, les individus sans aucun diplôme représentent 1/6ème de la population enquêtée (52000) et si nous leur ajoutons les personnes très peu diplômées (Certificat d’étude et Brevet, respectivement 20000 et 29000 personnes) nous  atteignons une peu plus d’1/3 de la population (32%).
+
+A l’opposé dans l’échelle de la hiérarchie des diplômés, les Bac +2 et + représentent respectivement 55000 et 35000 personnes) un pourcentage presque équivalent (28%).
+
+A noter qu’il est intéressant d’examiner cette répartition à la lumière de la variable âge des personnes concernées : nous pouvons facilement en déduire que les personnes possédant seulement un Certificat d’étude (réservé aux adultes depuis 1971 et aboli en 1989) ont dans la grande majorité + de 60 ans.
+
+A l’inverse, il faut noter que des enquêtés ont encore le statut d’étudiants lorsqu’ils sont interrogés (environ 27 000) (cf. graphique complémentaire).
+
+```{r Diplome 2, message=FALSE, warning=FALSE}
+ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=CSP), position="fill")+ ggtitle("Graphique 8: Catégorie socio-professionnelle selon le niveau de diplôme
+") +
+  xlab("Niveau de diplôme") + ylab("Proportion") + align
+```
+
+Par le biais du graphique   , nous allons nous intéresser à la répartition par catégorie socio-professionnelle des personnes en fonction de leur niveau de diplôme.
+
+En ce qui concerne les inactifs, tout d’abord, nous pouvons voir nettement l’influence du niveau de diplôme puisque nous remarquons que la part des inactifs diminue de droite à gauche graduellement avec l’augmentation de la qualification. Les inactifs représentent ainsi 70% des sans diplôme contre 48% des personnes possédant un Cap/Bep , 45%  de ceux possédant seulement un Bac, 30% un Bac+2 et seulement 25% des personnes ayant une licence ou plus.
+
+Notons ici 2 exceptions : d’une part, la part énorme des inactifs ayant un Certificat d’étude liée à l’âge de ces personnes (cf graphique n° 2), cette part représente ainsi des travailleurs à la retraite. Ensuite, le cas des inactifs ne possédant que le Brevet , sur représentés (75%) puisque plus nombreux ici en part que les inactifs non diplômés, nous pouvons sans doute expliquer cela cette fois par une part importante d’étudiants (jeunes encore dans les études) dans ces inactifs puisque notre population concernent les 15 ans et plus.
+
+Pour terminer, il faut souligner également la forte corrélation entre le niveau de diplôme et le niveau de CSP qui même si elle n’est pas surprenante ressort nettement : 90% des cadres ont un niveau égal ou supérieur à Bac +2 , % des Professions intermédiaires ont un niveau Bac et à l’inverse seulement un peu moins de 30% des ouvriers ont un diplôme supérieur au bac.
+
+```{r Diplome 3, message=FALSE, warning=FALSE}
+ggplot(subset(chomage2020, diplome!="NA"))+geom_bar(aes(x = diplome, fill=AGE))+ ggtitle("Graphique 9: Niveau de diplôme en fonction de l’âge
+") +
+  xlab("Niveau de diplôme") + ylab("Effectif") + align
+```
+
+Nous allons nous intéresser avec ce graphique à l’évolution du niveau de diplôme dans le temps. Il présente le nombre d’enquêtés pour chaque niveau de diplôme en fonction de leur âge.
+
+Arrêtons-nous d’abord sur les plus jeunes : notons que près d’1/3 d’entre eux ont le Brevet ou moins et près d’ ¼ ont eu le Bac ou + mais cette constatation est à relativiser dans la mesure où la tranche d’âge de 15 à 29 ans renferme 45 % de personnes encore en études (environ 25000) (Graphique complémentaire)
+
+La catégorie des plus âgés, 60 ans et +, a aussi ses particularités. En effet, cette tranche de la population est surreprésentée dans les niveaux de diplômes inférieurs au bac : quasiment 50% des sans diplôme, l’écrasante majorité des titulaires du Certificat d’étude, plus de 1/3 des personnes possédant au + un Cap/ Bep. En revanche, les séniors titulaires au moins d’un Bac +2 ne représentent qu’à peine 20000 personnes sur 115 000 présents dans la population enquêtée.
+
+Si nous nous intéressons aux autres catégories, les 30-59 ans, nous remarquons qu’ils représentent 40% des sans –diplôme contre seulement 20% des personnes ayant juste le Brevet et qu’ils ne sont quasiment pas représentés dans les titulaires du Certificat d’étude. Le reste de cette population est assez également répartie chez les titulaires du Bac, Bac +2 et + (entre 20000 et 30000 individus dans chaque catégorie) soit environ la moitié de cette population.
+
+Ces constatations faites , il est intéressant d’établir des regroupements et ainsi de faire ressortir la part importante des 15-49 ans dans les titulaires de diplômes supérieurs au Bac ( 90000 personnes environ sur 150000) en lien sans doute avec la politique menée sous la V è République de la massification scolaire : avec depuis la fin des années 50 et notamment avec la réforme Berthoin de 1959, la généralisation de l’entrée en sixième tout en envisageant le prolongement de la scolarité obligatoire jusqu’à 16 ans à partir de 1967, puis la proclamation en 1985 de l'objectif de mener 80 % d'une classe d'âge au niveau du baccalauréat à l'horizon de l'an 2000. 
+
+Après avoir précisé quelque peu les caractéristiques de notre population enquêtée du point de vue du niveau de diplôme, nous allons être en mesure de mener plus avant notre réflexion concernant la catégorie des enquêtés au chômage.
+
+```{r Diplome 4, message=FALSE, warning=FALSE}
+ggplot(subset(chomage2020, statutACT=="Chômeur"  & diplome!="NA" | statutACT=="Actif occupés"  & diplome!="NA"))+geom_bar(aes(x=diplome, fill=statutACT), position="fill")+ ggtitle("Graphique 10: Répartition des chômeurs selon \n leur niveau de diplôme le plus élevé
+
+") +
+  xlab("Niveau de diplôme") + ylab("Proportion") + align
+```
+
+Le graphique fait apparaître des différences significatives du taux de chômage en fonction du diplôme le plus élevé.
+
+Les non diplômés sont les plus exposés au chômage avec un taux avoisinant les 16%. Si nous considérons plus largement les personnes faiblement qualifiées (Brevet, Cap/Bep) le taux moyen est également supérieur à 10%.
+
+Tandis qu’à l’autre extrémité de l’échelle des diplômes les détenteurs d’un Bac +2 ou d’une Licence et plus sont à un taux à peu près équivalent de 5%. Ainsi nous pouvons dire que les détenteurs d’un diplôme du supérieur sont 3 fois moins concernés par le chômage que les travailleurs non qualifiés.
+
+Les détenteurs d’un bac se situent entre ces  deux extrêmes autour de 8% alors que le fait de posséder un Cap ou Bep améliore un peu le statut face au chômage sans que cela n’apparaisse de manière radicale sur le graphique (6 à 7 % de chômeurs)
+
+Par ailleurs, reprécisons ici, que le fait qu’une partie des personnes dotées d’un Certificat d’étude étant déjà concernées par la retraite, ils sont moins concernés par le chômage.
+Ainsi diplôme et situation professionnelle sont fortement corrélés : le diplôme est un atout pour accéder à l’emploi.
 
 ## Sexe
 
-```{r Sexe}
-##histogramme des sexes
+#### Dans cette partie, nous nous interrogerons sur les inégalités hommes-femmes dans le marché du travail en prenant appuis sur la comparaison entre le nombre d’heures travaillées et le nombres d’heures souhaitées, mais aussi expliquer les raisons de l’inactivité des femmes et voire éventuellement pourquoi travaillent-elles le plus souvent à temps partiel. 
 
-#38
-ggplot(chomage2020)+geom_bar(aes(x = SEXE))
 
-#39
-ggplot(chomage2020)+geom_bar(aes(x = SEXE, fill=AGE))
+```{r Sexe 1, message=FALSE, warning=FALSE}
+ggplot(chomage2020)+geom_bar(aes(x = SEXE)) + ggtitle("Graphique 11: Répartition de la population selon le sexe
 
-#40
-ggplot(chomage2020)+geom_bar(aes(x = SEXE, fill=statutACT))
 
-#41
-ggplot(chomage2020)+geom_bar(aes(x = SEXE, fill=AGE), position="fill")
-
-#42
-ggplot(chomage2020)+geom_bar(aes(x = SEXE, fill=statutACT), position="fill")
-
-##boites à moustaches et densité pour heures travaillées et heures souhaitées travaillées
-
-#43
-ggplot(chomage2020)+geom_boxplot(aes(x=SEXE, y=Htravaillées))+ylim(0, 80)
-
-#44
-ggplot(chomage2020)+geom_boxplot(aes(x=SEXE, y=Hsouhaitées))+ylim(0, 80)
-
-#45
-ggplot(chomage2020[chomage2020$SEXE=="Feminin",])+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
-
-#46
-ggplot(chomage2020[chomage2020$SEXE=="Masculin",])+geom_density(aes(Hsouhaitées, color="nb d'heures souhaitées"),bw=3)+geom_density(aes(Htravaillées, color="nb d'heures travaillées"),bw=3)+xlim(0, 80)
-
-#47
-ggplot(chomage2020)+geom_density(aes(Htravaillées, color=SEXE),bw=3)+xlim(0, 80)
-
-ggplot(chomage2020)+geom_density(aes(Hsouhaitées, color=SEXE),bw=3)+xlim(0, 80)
+") +
+  xlab("Sexe") + ylab("Effectif") + align
 ```
+
+Globalement, on est sur une population un peu plus féminine.Nous pouvons aussi remarquer qu’en termes de tranche d'âge, il y a plus d’hommes et de femmes âgés de 60 ans ou plus (mais la proportion est plus élevée chez les femmes). En confrontant ceci au statut d’activité, on peut dire qu’il y a majoritairement plus de femmes inactives que d’hommes.
+
+```{r Sexe 2, message=FALSE, warning=FALSE}
+ggplot(chomage2020)+geom_bar(aes(x = SEXE, fill=statutACT), position="fill") + ggtitle("graphique 12: Rapport entre statut d’activité et le sexe 
+") +
+  xlab("Sexe") + ylab("Proportion") + align
+```
+
+Pour revenir sur les raisons de l’inactivité des femmes dans le marché du travail, nous nous somme référés sur l’article de Helena Massardier publié en 2020. Ainsi, les femmes ne sont aujourd’hui plus sur-représentées dans les chiffres du taux de chômage, contrairement au milieu des années 1970 (au cours desquelles le taux de chômage des femmes françaises était de 4,5 %, presque le double de celui des hommes). Mais pour comprendre la persistance des inégalités hommes-femmes sur le marché du travail, il est nécessaire d’aller au-delà du seul taux de chômage et prendre en compte le halo autour du chômage, le sous-emploi et le travail à temps partiel, qui frappent encore aujourd’hui davantage les femmes que les hommes. 
+
+```{r Sexe 3, message=FALSE, warning=FALSE}
+ggplot(chomage2020)+geom_boxplot(aes(x=SEXE, y=Htravaillées))+ylim(0, 80)+ ggtitle("graphique 13: Nombre d'heures travaillées par sexe
+") +
+  xlab("Sexe") + ylab("Nombre d'heures") + align
+```
+
+```{r Sexe 4, message=FALSE, warning=FALSE}
+ggplot(chomage2020)+geom_boxplot(aes(x=SEXE, y=Hsouhaitées))+ylim(0, 80)+ ggtitle("graphique 13: Nombre d'heures souhaitées par sexe
+") +
+  xlab("Sexe") + ylab("Nombre d'heures") + align
+```
+En termes de nombre d’heures, on constate que les hommes travaillent un peu plus (40 heures) que les femmes (environ 37 heures). Aussi en heures souhaitées, les hommes déclarent vouloir travailler plus d’heures que les femmes. Les femmes travaillent le plus souvent à temps partiel. Loin d’être “choisi” par les femmes (pour libérer du temps nécessaire aux tâches domestiques et aux soins apportés aux enfants), le travail à temps partiel est souvent imposé par l’employeur au moment de l’embauche. En effet, les trois dernières décennies ont vu une augmentation des créations d’emploi à temps partiel dans le secteur privé (principalement la restauration, le commerce, l’hôtellerie et les services aux entreprises et particuliers). Les femmes peu ou pas qualifiées travaillant dans ces secteurs acceptent des emplois à temps partiel (qui sont parfois transformés en emplois à temps plein), souvent par peur de se trouver sans emploi.
+
+Les raisons pour lesquelles les femmes font moins d’heures sont souvent liées par des problèmes d’ordre familial (tâches ménagères et présence d’enfants dans la famille)
+
+## Conclusion
+
+Dans le cadre de cette collaboration entre étudiants sociologues et modélisateur de données, nous avons premièrement cherché à comprendre l’univers et les compétences de chacun. Ceci fait, nous nous sommes attachés à trouver un objet d’étude riche en données quantitatives, faciles à modéliser, et à croiser entre elles. Le portail de l’INSEE est bien doté en ressources de ce type. C’est dans cette perspective que nous nous sommes accaparés les données du chômage pour l’année 2020, afin d’y repérer des variables susceptibles d’apporter une analyse significative et éclairante, lorsque confrontées entre elles. C’est pourquoi nous avons retenu :
+
+* Le chômage par tranche d’âge.
+* La CSP par tranche d'âge.
+
+Nous avons croisé ces variables pour mettre en relief l’impact du chômage sur les CSP par tranche d’âge, et en conséquence ses différences significatives, lesquelles mettent en évidence la plus grande précarisation des extrémités du graphique : les plus jeunes d’un côté, les plus âgés de l’autre (bien que les niveaux de CSP restent proportionnellement et approximativement similaires entre les générations, à l’exception des agriculteurs et des ouvriers, lesquels occupent de fait une position à part dans les inactifs).
+
+* Le taux de chômage par statut d’activité.
+
+En combinant ces données avec le nombre d’heures de travail souhaitées par statuts d’activité, nous avons compris que les plus valorisés sur le marché du travail étaient également ceux qui subissent le plus la pression des horaires. A contrario, les catégories peu valorisées cherchent une augmentation du volume horaire de travail.
+
+
+* Le niveau de diplôme de la population française.
+* Le niveau de diplôme selon les catégories d’activité.
+
+En recoupant ces variables avec le chômage par tranche d’âge, nous avons mis en lumière la vulnérabilité des catégories peu diplômées sur le marché de l’emploi, ainsi que le grand nombre d’inactifs dans les tranches de populations les plus jeunes et les plus âgées. Ceci pour des raisons parfois évidentes, parfois plus difficiles à circonscrire.
+De manière générale, le marché de l’emploi en France déplace le curseur en faveur des plus diplômés.
+
+*	La proportion de la population par sexe
+
+Que nous avons comparé à la variable “répartition des statuts d’activité” dans la population, afin de mettre en relief les déséquilibres structurels d’inactivité en défaveur des femmes. Pour comprendre si ces déséquilibres étaient choisis ou subis, nous avons rajouté la variable suivante :
+
+* Les souhaits d’amplitude de travail par sexe.
+
+Comparées à la littérature référente, ces données mettent en évidence la réalité subie de l’inactivité féminine.
+
+Toutefois, les données traitées ne s’inscrivent pas seulement dans une analyse croisée de variables sur le chômage, mais plus largement sur l’inactivité. Ce terme générique explique la présence - souvent difficile à identifier dans nos données ou dans nos graphiques – de retraités, d’étudiants, de mineurs à charge parentale, et autres inactifs par rente ou même philosophie de vie. Ces inactifs rendent les graphiques parfois surprenants à la lecture, et ceci dès le graphique 1. Une segmentation de ces inactifs permettrait une analyse plus fine, et des indicateurs de tendances sociales plus précis. Pour résumer plus simplement, nous n’avons pas toujours été capables de définir, et donc de comprendre, les contours de l’inactivité professionnelle en France en 2020. Pour y parvenir, il aurait fallu recouper nos données avec d’autres variables. Ici s’arrête notre perspective de champ.
+
+### Méthodologie
+
+Une fois les variables choisies et combinées entre elles, nous les avons modélisées sous différents types d’histogrammes, et avons retenu ceux qui mettaient le plus en évidence les occurrences ou les particularités nous permettant d’en déduire une analyse. C’est par pertinence visuelle que nous avons opéré. Nous avons effectué les redressements par histogrammes à valeurs alignées (graphiques 2, 5, 8, 10 et 12), pour une vision des données non encombrée par les variables démographiques, non utiles à la lecture. En revanche, les valeurs absolues sont appréciables pour la lecture de données proportionnelles (graphique 11), ou lorsque les données de comptage sont à prendre en compte dans une perspective d’ensemble (graphique 9). La boite à moustache (box plot), est utile lorsqu’on cherche à mettre en relief la médiane entre plusieurs données (graphiques 3 et 4, 13 et 14).
+
+Nous avons d’emblée écarté les courbes, car nous ne cherchions pas à mettre en avant une tendance dans une temporalité ; nos données représentant plutôt une prise de vue à l’instant T – l’année 2020 – sans mise en perspective ou projection dans un ensemble plus vaste (chronologie). Ainsi, en réflexion sur les données à traiter, nous avons rejeté d’autres diagrammes dans le même souci d’objectivité. Nos choix, s’ils ne sont pas les plus esthétiques, ont pour but d’objectiver au plus juste les données choisies en un rapide coup d’œil.
+
+### Limites du projet R
+
+Notre collaboration s’est déroulée sur une bonne entente naturelle, ce que nous considérons comme une chance. Aussi, la coordination d’équipe s’est installée naturellement. Nous n’avions pas d’objectif d’analyse sociologique prédéfini. Nous avons plutôt pris le projet comme une possibilité ludique d’articuler des données statistiques dans un cadre graphique en 2D, puis de leur appliquer la meilleure lisibilité possible pour une seconde approche plus sociale. En ceci, nous avons réellement mutualisé nos champs de compétences.
+
+Toutefois, nous avons souvent eu l’impression que notre projet reposait uniquement sur les acquis de notre modélisateur Julien. Notamment sur le suivi des complexes installations de R et les manipulations de Github et de DataViz. Si Illiana a semblé comprendre globalement les logiques du langage informatique R et des manipulations relatives à effectuer, Dorothée et Sébastien ont décroché très rapidement, si tant est qu’ils aient accroché le wagon un jour… Aziz ne semble lui non plus pas très à l’aise avec les objectifs du projet. Nous nous sommes sentis à l’étroit dans nos limites, face à un environnement aussi technique et étranger à nos compétences.
+
+## Références 
+
+[1] TAnglaret, D. (2002). Les plus de 50 ans en marge de l'emploi et du chômage. Retraite et société, no<(sup> 37), 97-109. https://doi.org/10.3917/rs.037.0097
+
+[2] Batard, P., Ferrari, N. & Saillard, E. (2012). Le chômage des jeunes : quel diagnostic. Économie & prévision, 200-201, 207-215. https://doi.org/10.3917/ecop.200.0207
+
+[3] Hélardot, V. (2005). Précarisation du travail et de l'emploi : quelles résonances dans la construction des expériences sociales ?. Empan, no<(sup> 60), 30-37. https://doi.org/10.3917/empa.060.0030
+
+[4] https://www.pole-emploi.org/files/live/sites/peorg/files/documents/Statistiques-et-analyses/E%26S/es_25_statitiques_demandeur_emploi29869.pdf
+
+[5] Anglaret, D. (2002). Les plus de 50 ans en marge de l'emploi et du chômage. Retraite et société, no<(sup> 37), 97-109. https://doi.org/10.3917/rs.037.0097
+
+[6] Batard, P., Ferrari, N. & Saillard, E. (2012). Le chômage des jeunes : quel diagnostic ?. Économie & prévision, 200-201, 207-215. https://doi.org/10.3917/ecop.200.0207
+
+[7] Helena Massadier (2020), Le taux de chômage des femmes françaises : un indicateur en trompe-l'oeil, Science Po, Chaire pour l’emploi et l’entrepreuriat des femmes https://www.sciencespo.fr/women-business/fr/actualites/le-taux-de-chomage-des-femmes-francaises-un-indicateur-en-trompe-l-oeil.html 
